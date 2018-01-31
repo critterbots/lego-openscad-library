@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-var model_fn = 36;
+var model_fn = 12;
 
 function pin_hole(di, de)
 {
@@ -68,16 +68,16 @@ function beam(size)
 		var size = 1;
 	}
 
-	var o = [];
-	o.push(
+	var o =
 		linear_extrude({height: 7.9},
 			hull(
 				circle({r: 3.95, center: true, fn: model_fn}).translate([4, 4, 0]),
 				circle({r: 3.95, center: true, fn: model_fn}).translate([size * 8 - 4, 4, 0])
 			)
 		).translate([0.05, 0.05, 0.05])
-	);
-	o.push(
+	;
+
+	o = difference(o,
 		linear_extrude({height: 3},
 			hull(
 				circle({r: 3.1, center: true, fn: model_fn}).translate([4, 4, 0]),
@@ -85,7 +85,8 @@ function beam(size)
 			)
 		).translate([0, 0, 0])
 	);
-	o.push(
+
+	o = difference(o,
 		linear_extrude({height: 3},
 			hull(
 				circle({r: 3.1, center: true, fn: model_fn}).translate([4, 4, 0]),
@@ -93,113 +94,50 @@ function beam(size)
 			)
 		).translate([0, 0, 5])
 	);
-	o.push(pin_hole().translate([4, 4, 0]));
-	for (var i = 1; i < size; i++) {
-		o.push(pin_hole().translate([4 + (i * 8), 4, 0]));
-	}
-
-	o = difference(o);
 
 	for (var i = 0; i < size; i++) {
-		o.union(pin_border().translate([4 + (i * 8), 4, 0]));
+		o = union(o, pin_border().translate([4 + (i * 8), 4, 0.05]));
 	}
 
-	o = union(o);
+	for (var i = 0; i < size; i++) {
+		o = difference(o, pin_hole().translate([4 + (i * 8), 4, 0]));
+	}
 
-	return difference(
-		union(
-			difference(o/*,
-			for ( i = [0: size - 1]) {
-				pin_border().translate([4 + (i * 8), 4, 0]);
-			}*/
+	return o;
+}
+
+function plate(ux, uy, bevel_x, bevel_y)
+{
+	if (typeof bevel_x == "undefined") {
+		bevel_x = false;
+	}
+	if (typeof bevel_y == "undefined") {
+		bevel_y = false;
+	}
+
+	var o = square((ux * 8) - 0.1, (uy * 8) - 0.1);
+	if (bevel_x) {
+		o = difference(o,
+			hull(
+				circle(2.95, true).translate([1, 1, 0]),
+				circle(2.95, true).translate([(ux - 1) * 8 + 1, 1, 0])
+			),
+			square(4, uy * 8).translate([0, 0, 0]),
+			hull(
+				circle(2.95, true).translate([1, (uy - 3) * 8 + 1, 0]),
+				circle(2.95, true).translate([(ux - 1) * 8 + 1, (uy - 3) * 8 + 1, 0])
 			)
-		) /*,
-		for ( i = [0: size - 1]) {
-			pin_hole().translate([i * 8 + 4, 4, 0]);
-		}*/
-	);
-}
-
-var letters = [
-	[
-		[ 0, 1, 1, 1, 1, 0 ],
-		[ 1, 1, 0, 0, 1, 1 ],
-		[ 0, 0, 0, 0, 0, 1 ],
-		[ 0, 0, 0, 0, 1, 1 ],
-		[ 0, 0, 0, 1, 1, 0 ],
-		[ 0, 0, 0, 0, 1, 1 ],
-		[ 0, 0, 0, 0, 0, 1 ],
-		[ 1, 1, 0, 0, 1, 1 ],
-		[ 0, 1, 1, 1, 1, 0 ]
-	],
-	[
-		[ 0, 1, 1, 1, 1, 0 ],
-		[ 1, 1, 0, 0, 1, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 1, 0, 0, 1, 1 ],
-		[ 0, 1, 1, 1, 1, 0 ]
-	],
-	[
-		[ 0, 1, 1, 1, 1, 0 ],
-		[ 1, 1, 0, 0, 1, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 1, 0, 0, 1, 1 ],
-		[ 0, 1, 1, 1, 1, 0 ]
-	],
-	[
-		[ 0, 1, 1, 1, 1, 0 ],
-		[ 1, 1, 0, 0, 1, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 0, 0, 0, 0, 1 ],
-		[ 1, 1, 0, 0, 1, 1 ],
-		[ 0, 1, 1, 1, 1, 0 ]
-	]
-];
-
-/*
-module paint(start = -1, i = 0, j = 0, k = 0) {
-	if (k == 5) {
-		if (start > -1) {
-			if (letters[i][j][k] == 0) {
-				translate([(i * 7 + start) * 8, j * 8, 0]) beam(k - start);
-			} else {
-				translate([(i * 7 + start) * 8, j * 8, 0]) beam(k + 1 - start);
-			}
-		} else if (letters[i][j][k] == 1) {
-			translate([(i * 7 + k) * 8, j * 8, 0]) beam(1);
-		}
-	} else if (start > -1 && letters[i][j][k] == 0) {
-		translate([(i * 7 + start) * 8, j * 8, 0]) beam(k - start);
-		paint(start = -1, i = i, j = j, k = k + 1);
-	} else if (start == -1 && letters[i][j][k] == 1) {
-		paint(start = k, i = i, j = j, k = k + 1);
-	} else {
-		paint(start = start, i = i, j = j, k = k + 1);
+		);
 	}
+
+	return linear_extrude({height: 1}, o).translate([0.05, 0.05, 0.05]);
 }
-*/
 
 function main()
 {
-	return beam(3);
+	return union(
+		//beam(7),
+		plate(7, 9, true).translate([0, 0, 0], false, true)/*,
+		beam(7).translate([0, 48, 0])*/
+	);
 }
-/*
-color("green")
-	for ( i = [0:3]) {
-		for ( j = [0:8]) {
-			paint(i = i, j = j);
-		}
-	}
-;
-*/
