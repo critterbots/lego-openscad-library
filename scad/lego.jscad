@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-var model_fn = 12;
+var model_fn = 36;
 
 function pin_hole(di, de)
 {
@@ -71,8 +71,8 @@ function beam(size)
 	var o =
 		linear_extrude({height: 7.9},
 			hull(
-				circle({r: 3.95, center: true, fn: model_fn}).translate([4, 4, 0]),
-				circle({r: 3.95, center: true, fn: model_fn}).translate([size * 8 - 4, 4, 0])
+				circle({r: 3.95, center: true, fn: model_fn}).translate([3.95, 3.95, 0]),
+				circle({r: 3.95, center: true, fn: model_fn}).translate([size * 8 - 3.9, 3.9, 0])
 			)
 		).translate([0.05, 0.05, 0.05])
 	;
@@ -80,19 +80,19 @@ function beam(size)
 	o = difference(o,
 		linear_extrude({height: 3},
 			hull(
-				circle({r: 3.1, center: true, fn: model_fn}).translate([4, 4, 0]),
-				circle({r: 3.1, center: true, fn: model_fn}).translate([size * 8 -4, 4, 0])
+				circle({r: 3.1, center: true, fn: model_fn}).translate([3.95, 3.95, 0]),
+				circle({r: 3.1, center: true, fn: model_fn}).translate([size * 8 - 3.9, 3.95, 0])
 			)
-		).translate([0, 0, 0])
+		).translate([0.05, 0.05, 0.05])
 	);
 
 	o = difference(o,
 		linear_extrude({height: 3},
 			hull(
-				circle({r: 3.1, center: true, fn: model_fn}).translate([4, 4, 0]),
-				circle({r: 3.1, center: true, fn: model_fn}).translate([size * 8 - 4, 4, 0])
+				circle({r: 3.1, center: true, fn: model_fn}).translate([3.95, 3.95, 0]),
+				circle({r: 3.1, center: true, fn: model_fn}).translate([size * 8 - 3.9, 3.95, 0])
 			)
-		).translate([0, 0, 5])
+		).translate([0.05, 0.05, 5])
 	);
 
 	for (var i = 0; i < size; i++) {
@@ -115,29 +115,32 @@ function plate(ux, uy, bevel_x, bevel_y)
 		bevel_y = false;
 	}
 
-	var o = square((ux * 8) - 0.1, (uy * 8) - 0.1);
+	var o = square([(ux * 8) - 0.1, (uy * 8) - 0.1]);
 	if (bevel_x) {
 		o = difference(o,
 			hull(
 				circle(2.95, true).translate([1, 1, 0]),
 				circle(2.95, true).translate([(ux - 1) * 8 + 1, 1, 0])
 			),
-			square(4, uy * 8).translate([0, 0, 0]),
+			square([uy * 8, 4]).translate([0, 0, 0]),
 			hull(
-				circle(2.95, true).translate([1, (uy - 3) * 8 + 1, 0]),
-				circle(2.95, true).translate([(ux - 1) * 8 + 1, (uy - 3) * 8 + 1, 0])
-			)
+				circle(2.95, true).translate([1, (uy - 1) * 8 + 1, 0]),
+				circle(2.95, true).translate([(ux - 1) * 8 + 1, (uy - 1) * 8 + 1, 0])
+			),
+			square([uy * 8, 4]).translate([0, (uy - 1) * 8 + 3.9, 0])
 		);
 	}
 
-	return linear_extrude({height: 1}, o).translate([0.05, 0.05, 0.05]);
+	return linear_extrude({height: 0.9}, o).translate([0.05, 0.05, 0.05]);
 }
 
 function main()
 {
 	return union(
-		//beam(7),
-		plate(7, 9, true).translate([0, 0, 0], false, true)/*,
-		beam(7).translate([0, 48, 0])*/
+		beam(7),
+		beam(7).translate([0, 80, 0]),
+		plate(7, 11, true, false).setColor([128, 0, 0]).translate([0, 0, 0]),
+		rotate([0, 90, 0], plate(1, 10).setColor([0, 128, 0])).translate([0.05, 4, 8]),
+		rotate([0, 270, 0], plate(1, 10).setColor([128, 128, 0])).translate([56.05, 4, 0])
 	);
 }
